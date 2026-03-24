@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisionAssist Pro</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+<style>
+body {
+  background:#0a0e1a;
+  color:white;
+  font-family:sans-serif;
+  text-align:center;
+  padding:20px;
+}
+.container {
+  max-width:500px;
+  margin:auto;
+}
+video {
+  width:100%;
+  border-radius:12px;
+  margin-top:10px;
+}
+button {
+  margin:8px;
+  padding:10px 15px;
+  border:none;
+  border-radius:20px;
+  cursor:pointer;
+}
+.primary { background:#00d4ff; color:black; }
+.secondary { background:#333; color:white; }
+.result {
+  margin-top:15px;
+  padding:10px;
+  border-radius:10px;
+  background:#111827;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>🧠 VisionAssist Pro</h2>
+  <p>Smart Object & Human Detection</p>
+
+  <video id="video" autoplay></video>
+
+  <br>
+
+  <!-- Buttons kept as backup -->
+  <button class="secondary" onclick="startCamera()">📷 Start Camera</button>
+  <button class="primary" onclick="capture()">🔍 Analyze</button>
+
+  <div class="result" id="result">Loading AI model...</div>
+
+  <button class="primary" onclick="speak()">🔊 Speak</button>
+</div>
+
+<script>
+let stream;
+let description = "";
+let model;
+
+// Load AI model
+async function loadModel() {
+  model = await cocoSsd.load();
+  document.getElementById("result").innerText = "AI Ready. Starting camera...";
+  startCamera(); 
+}
+loadModel();
+
+function startCamera() {
+  navigator.mediaDevices.getUserMedia({ video:true })
+    .then(s => {
+      stream = s;
+      document.getElementById("video").srcObject = stream;
+
+      // 🔥 auto detect every 3 seconds
+      setInterval(autoDetect, 3000);
+    });
+}
+
+// Capture frame
+function capture() {
+  autoDetect();
+}
+
+async function autoDetect() {
+  const video = document.getElementById("video");
+  const result = document.getElementById("result");
+
+  if (!model) return;
+
+  result.innerText = "Analyzing...";
+
+  const predictions = await model.detect(video);
+
+  if (predictions.length > 0) {
+    const top = predictions[0].class;
+
+    if (top === "person") {
+      description = "Person detected in front of you.";
+    } else {
+      description = "Object detected: " + top;
+    }
+
+    result.innerText = description;
+
+    speak(); // 🔥 auto voice
+
+  } else {
+    description = "No object detected.";
+    result.innerText = description;
+  }
+}
+
+// Voice
+function speak() {
+  if(!description) return;
+
+  const utter = new SpeechSynthesisUtterance(description);
+  speechSynthesis.cancel(); // stop previous speech
+  speechSynthesis.speak(utter);
+}
+</script>
+
+</body>
+</html>
