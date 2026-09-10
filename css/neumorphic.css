@@ -1,0 +1,315 @@
+/* Neumorphic Components */
+
+/* Neumorphic Button */
+.neumorphic-button {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    box-shadow: var(--neumorphic-outset);
+    transition: all var(--transition-normal);
+    position: relative;
+    min-width: 120px;
+    min-height: 48px;
+}
+
+.neumorphic-button:hover {
+    box-shadow: var(--neumorphic-outset-subtle);
+    transform: translateY(-1px);
+}
+
+.neumorphic-button:active {
+    box-shadow: var(--neumorphic-inset);
+    transform: translateY(0);
+}
+
+.neumorphic-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.neumorphic-button.primary {
+    background: var(--surface-elevated);
+    color: var(--accent);
+}
+
+.neumorphic-button.primary:hover {
+    background: var(--surface-higher);
+}
+
+.neumorphic-button.secondary {
+    color: var(--text-secondary);
+}
+
+.neumorphic-button.secondary:hover {
+    color: var(--text-primary);
+}
+
+/* Neumorphic Panel */
+.neumorphic-panel {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--neumorphic-outset);
+    padding: var(--spacing-lg);
+}
+
+/* Neumorphic Input */
+.neumorphic-input {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    padding: var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: var(--neumorphic-inset);
+    transition: box-shadow var(--transition-normal);
+}
+
+.neumorphic-input:focus {
+    box-shadow: var(--neumorphic-inset), 0 0 0 2px var(--accent-muted);
+}
+
+.neumorphic-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Neumorphic Toggle */
+.neumorphic-toggle {
+    position: relative;
+    width: 48px;
+    height: 28px;
+    background: var(--surface);
+    border-radius: var(--radius-full);
+    box-shadow: var(--neumorphic-inset);
+    cursor: pointer;
+    transition: background var(--transition-normal);
+}
+
+.neumorphic-toggle.active {
+    background: var(--surface-elevated);
+}
+
+.neumorphic-toggle::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    box-shadow: var(--neumorphic-outset-subtle);
+    transition: all var(--transition-normal);
+}
+
+.neumorphic-toggle.active::after {
+    left: 24px;
+    background: var(--accent);
+}
+
+/* Neumorphic Card */
+.neumorphic-card {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--neumorphic-outset);
+    padding: var(--spacing-lg);
+    transition: box-shadow var(--transition-normal);
+}
+
+.neumorphic-card:hover {
+    box-shadow: var(--neumorphic-outset-subtle);
+}
+
+/* Neumorphic Slider */
+.neumorphic-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: var(--surface);
+    border-radius: var(--radius-full);
+    box-shadow: var(--neumorphic-inset);
+    outline: none;
+}
+
+.neumorphic-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: var(--surface-elevated);
+    border-radius: 50%;
+    box-shadow: var(--neumorphic-outset);
+    cursor: pointer;
+    transition: box-shadow var(--transition-normal);
+}
+
+.neumorphic-slider::-webkit-slider-thumb:hover {
+    box-shadow: var(--neumorphic-outset-subtle);
+}
+
+.neumorphic-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: var(--surface-elevated);
+    border-radius: 50%;
+    box-shadow: var(--neumorphic-outset);
+    cursor: pointer;
+    border: none;
+}
+
+/* Text Button (No neumorphism, minimal) */
+.text-button {
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.text-button:hover {
+    color: var(--text-primary);
+    background: var(--surface-elevated);
+}
+
+.text-button:active {
+    background: var(--surface-higher);
+}
+
+/* Segment Control */
+.segmented-control {
+    display: flex;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--neumorphic-inset);
+    padding: 4px;
+    gap: 4px;
+}
+
+.segment-button {
+    flex: 1;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.segment-button:hover {
+    color: var(--text-primary);
+}
+
+.segment-button.active {
+    background: var(--surface-elevated);
+    color: var(--accent);
+    box-shadow: var(--neumorphic-outset-subtle);
+}
+
+/* Volume Control */
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--neumorphic-inset);
+    padding: var(--spacing-md);
+}
+
+.volume-button {
+    font-family: var(--font-family);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.volume-button:hover {
+    color: var(--text-primary);
+    box-shadow: var(--neumorphic-outset-subtle);
+}
+
+.volume-value {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+    min-width: 48px;
+    text-align: center;
+}
+
+/* Toggle Label */
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    cursor: pointer;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    transition: background var(--transition-normal);
+}
+
+.toggle-label:hover {
+    background: var(--surface-elevated);
+}
+
+.toggle-label input[type="checkbox"] {
+    appearance: none;
+    width: 48px;
+    height: 28px;
+    background: var(--surface);
+    border-radius: var(--radius-full);
+    box-shadow: var(--neumorphic-inset);
+    cursor: pointer;
+    position: relative;
+    transition: background var(--transition-normal);
+}
+
+.toggle-label input[type="checkbox"]::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    box-shadow: var(--neumorphic-outset-subtle);
+    transition: all var(--transition-normal);
+}
+
+.toggle-label input[type="checkbox"]:checked {
+    background: var(--surface-elevated);
+}
+
+.toggle-label input[type="checkbox"]:checked::after {
+    left: 24px;
+    background: var(--accent);
+}
+
+.toggle-text {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-normal);
+    color: var(--text-primary);
+}

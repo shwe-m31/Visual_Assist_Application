@@ -1,450 +1,379 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VisionAssist Pro</title>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg:        #080c14;
-    --surface:   #0e1420;
-    --card:      #131926;
-    --border:    #1e2a3a;
-    --accent:    #3b82f6;
-    --accent-lo: rgba(59,130,246,0.12);
-    --accent-gl: rgba(59,130,246,0.06);
-    --green:     #22c55e;
-    --green-lo:  rgba(34,197,94,0.12);
-    --text:      #f0f4ff;
-    --muted:     #64748b;
-    --sub:       #94a3b8;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 28px 16px 48px;
-  }
-
-  /* ── Header ───────────────────────────────────────── */
-  header {
-    width: 100%;
-    max-width: 480px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 28px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .brand-icon {
-    width: 36px; height: 36px;
-    background: var(--accent-lo);
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 17px;
-  }
-
-  .brand-name {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-  }
-
-  .brand-name span { color: var(--accent); }
-
-  .status-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    background: var(--green-lo);
-    border: 1px solid rgba(34,197,94,0.25);
-    border-radius: 99px;
-    font-size: 12px;
-    color: var(--green);
-    font-weight: 500;
-  }
-
-  .status-dot {
-    width: 6px; height: 6px;
-    background: var(--green);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%,100% { opacity: 1; }
-    50%      { opacity: 0.4; }
-  }
-
-  /* ── Camera card ──────────────────────────────────── */
-  .camera-card {
-    width: 100%;
-    max-width: 480px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .camera-frame {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 4/3;
-    background: #050810;
-    overflow: hidden;
-  }
-
-  video {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  /* corner brackets */
-  .corner {
-    position: absolute;
-    width: 22px; height: 22px;
-    border-color: var(--accent);
-    border-style: solid;
-    opacity: 0.7;
-    z-index: 2;
-  }
-  .corner.tl { top:14px; left:14px; border-width:2px 0 0 2px; border-radius:4px 0 0 0; }
-  .corner.tr { top:14px; right:14px; border-width:2px 2px 0 0; border-radius:0 4px 0 0; }
-  .corner.bl { bottom:14px; left:14px; border-width:0 0 2px 2px; border-radius:0 0 0 4px; }
-  .corner.br { bottom:14px; right:14px; border-width:0 2px 2px 0; border-radius:0 0 4px 0; }
-
-  /* scan line while detecting */
-  .scan-line {
-    position: absolute;
-    left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0;
-    z-index: 2;
-    top: 0;
-  }
-  .scanning .scan-line {
-    opacity: 1;
-    animation: scanDown 1.4s ease-in-out infinite;
-  }
-  @keyframes scanDown {
-    0%   { top: 0%; }
-    100% { top: 100%; }
-  }
-
-  /* no-feed placeholder */
-  .no-feed {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: #050810;
-    z-index: 1;
-  }
-  .no-feed-icon { font-size: 36px; opacity: 0.35; }
-  .no-feed-text { font-size: 13px; color: var(--muted); }
-
-  /* ── Camera bottom bar ─────────────────────────────── */
-  .cam-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-top: 1px solid var(--border);
-  }
-
-  .cam-label {
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-  }
-
-  .btn-cam {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 18px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 99px;
-    font-size: 13px;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    transition: opacity .2s;
-  }
-  .btn-cam:hover { opacity: 0.88; }
-  .btn-cam:disabled { opacity: 0.45; cursor: default; }
-
-  /* ── Result card ──────────────────────────────────── */
-  .result-card {
-    width: 100%;
-    max-width: 480px;
-    margin-top: 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-  }
-
-  .result-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .result-title {
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-  }
-
-  .confidence-chip {
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 99px;
-    background: var(--accent-lo);
-    color: var(--accent);
-    font-weight: 500;
-    display: none;
-  }
-
-  .result-body {
-    padding: 18px;
-    min-height: 72px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .result-icon-wrap {
-    flex-shrink: 0;
-    width: 44px; height: 44px;
-    border-radius: 12px;
-    background: var(--accent-lo);
-    border: 1px solid rgba(59,130,246,0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-
-  .result-text {
-    font-size: 15px;
-    font-weight: 500;
-    line-height: 1.45;
-    color: var(--text);
-  }
-
-  .result-text.idle { color: var(--muted); font-weight: 400; font-size: 14px; }
-
-  /* ── Action row ───────────────────────────────────── */
-  .action-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-    max-width: 480px;
-    margin-top: 12px;
-  }
-
-  .btn-action {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 13px;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--sub);
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background .2s, border-color .2s, color .2s;
-  }
-  .btn-action:hover {
-    background: var(--accent-lo);
-    border-color: var(--accent);
-    color: var(--text);
-  }
-  .btn-action.active {
-    background: var(--accent-lo);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  /* ── Footer ───────────────────────────────────────── */
-  footer {
-    margin-top: 28px;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.3px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visual Assist - Real-time vision assistance for visually impaired users">
+    <title>Visual Assist</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/neumorphic.css">
+    <link rel="stylesheet" href="css/screens.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <!-- Module JavaScript -->
+    <script type="module" src="js/app.js"></script>
 </head>
 <body>
+    <div id="app">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen">
+            <div class="welcome-container">
+                <h1 class="brand-title">VISUAL ASSIST</h1>
+                <p class="brand-subtitle">See your surroundings through intelligent voice assistance</p>
+                <div class="welcome-actions">
+                    <button id="start-assistance-btn" class="neumorphic-button primary">START ASSISTANCE</button>
+                    <button id="accessibility-setup-btn" class="neumorphic-button secondary">ACCESSIBILITY SETUP</button>
+                </div>
+            </div>
+        </div>
 
-<!-- Header -->
-<header>
-  <div class="brand">
-    <div class="brand-icon">👁</div>
-    <span class="brand-name">Vision<span>Assist</span> Pro</span>
-  </div>
-  <div class="status-pill" id="statusPill">
-    <div class="status-dot"></div>
-    <span id="statusText">Loading…</span>
-  </div>
-</header>
+        <!-- Accessibility Setup Screen -->
+        <div id="accessibility-screen" class="screen hidden">
+            <div class="screen-container">
+                <header class="screen-header">
+                    <h1>ACCESSIBILITY SETUP</h1>
+                    <p class="screen-subtitle">Configure your voice and detection preferences</p>
+                </header>
+                
+                <div class="settings-section">
+                    <h2 class="section-title">VOICE SETTINGS</h2>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">VOICE SPEED</label>
+                        <div class="segmented-control">
+                            <button class="segment-button" data-value="slow">SLOW</button>
+                            <button class="segment-button active" data-value="normal">NORMAL</button>
+                            <button class="segment-button" data-value="fast">FAST</button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">VOICE VOLUME</label>
+                        <div class="volume-control">
+                            <button class="volume-button" data-action="decrease">LOWER</button>
+                            <span class="volume-value">100%</span>
+                            <button class="volume-button" data-action="increase">HIGHER</button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">ANNOUNCEMENT FREQUENCY</label>
+                        <div class="segmented-control">
+                            <button class="segment-button" data-value="low">LOW</button>
+                            <button class="segment-button active" data-value="normal">NORMAL</button>
+                            <button class="segment-button" data-value="high">HIGH</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h2 class="section-title">DETECTION SETTINGS</h2>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">DETECTION SENSITIVITY</label>
+                        <div class="segmented-control">
+                            <button class="segment-button" data-value="low">LOW</button>
+                            <button class="segment-button active" data-value="normal">NORMAL</button>
+                            <button class="segment-button" data-value="high">HIGH</button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="person-detection" checked>
+                            <span class="toggle-text">Person Detection</span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="vehicle-detection" checked>
+                            <span class="toggle-text">Vehicle Detection</span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="obstacle-warnings" checked>
+                            <span class="toggle-text">Obstacle Warnings</span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="distance-announcements" checked>
+                            <span class="toggle-text">Distance Announcements</span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="directional-announcements" checked>
+                            <span class="toggle-text">Directional Announcements</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h2 class="section-title">SAFETY SETTINGS</h2>
+                    
+                    <div class="setting-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="continuous-detection" checked>
+                            <span class="toggle-text">Continuous Detection</span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="battery-optimization" checked>
+                            <span class="toggle-text">Battery Optimization</span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="emergency-safety-mode">
+                            <span class="toggle-text">Emergency Safety Mode</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="screen-actions">
+                    <button id="save-accessibility-btn" class="neumorphic-button primary">SAVE AND CONTINUE</button>
+                    <button id="skip-accessibility-btn" class="neumorphic-button secondary">SKIP</button>
+                </div>
+            </div>
+        </div>
 
-<!-- Camera card -->
-<div class="camera-card" id="cameraCard">
-  <div class="camera-frame" id="cameraFrame">
-    <div class="corner tl"></div>
-    <div class="corner tr"></div>
-    <div class="corner bl"></div>
-    <div class="corner br"></div>
-    <div class="scan-line" id="scanLine"></div>
-    <div class="no-feed" id="noFeed">
-      <div class="no-feed-icon">📷</div>
-      <span class="no-feed-text">Camera inactive</span>
+        <!-- Main Vision Screen -->
+        <div id="vision-screen" class="screen hidden">
+            <div class="vision-container">
+                <header class="vision-header">
+                    <div class="header-brand">
+                        <span class="brand-text">VISUAL ASSIST</span>
+                    </div>
+                    <div class="header-status">
+                        <span id="detection-status" class="status-text">LIVE DETECTION</span>
+                    </div>
+                    <button id="menu-btn" class="text-button">MENU</button>
+                </header>
+                
+                <div class="camera-wrapper">
+                    <div class="camera-container">
+                        <video id="camera-feed" autoplay playsinline muted></video>
+                        <canvas id="detection-canvas"></canvas>
+                        
+                        <div id="camera-placeholder" class="camera-placeholder">
+                            <div class="placeholder-content">
+                                <span class="placeholder-text">Camera not active</span>
+                                <button id="activate-camera-btn" class="neumorphic-button primary">ACTIVATE CAMERA</button>
+                            </div>
+                        </div>
+                        
+                        <div id="detection-overlays" class="detection-overlays"></div>
+                    </div>
+                </div>
+                
+                <div class="vision-controls">
+                    <div class="control-row">
+                        <button id="pause-detection-btn" class="neumorphic-button control-button">PAUSE</button>
+                        <button id="repeat-btn" class="neumorphic-button control-button">REPEAT</button>
+                        <button id="what-around-btn" class="neumorphic-button control-button">WHAT IS AROUND ME</button>
+                    </div>
+                </div>
+                
+                <div id="current-detection" class="detection-info">
+                    <div class="detection-item">
+                        <span class="detection-label">No objects detected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detection Details Screen -->
+        <div id="details-screen" class="screen hidden">
+            <div class="screen-container">
+                <header class="screen-header">
+                    <button id="back-to-vision-btn" class="text-button">BACK</button>
+                    <h1>DETECTION DETAILS</h1>
+                    <div class="header-spacer"></div>
+                </header>
+                
+                <div id="detection-details-content" class="details-content">
+                    <div class="detail-group">
+                        <span class="detail-label">OBJECT</span>
+                        <span id="detail-object" class="detail-value">Person</span>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">COUNT</span>
+                        <span id="detail-count" class="detail-value">2</span>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">DIRECTION</span>
+                        <span id="detail-direction" class="detail-value">Center</span>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">DISTANCE</span>
+                        <span id="detail-distance" class="detail-value">Approximately 2.4 m</span>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">CONFIDENCE</span>
+                        <span id="detail-confidence" class="detail-value">94%</span>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">MOVEMENT</span>
+                        <span id="detail-movement" class="detail-value">Approaching</span>
+                    </div>
+                </div>
+                
+                <div class="screen-actions">
+                    <button id="speak-details-btn" class="neumorphic-button primary">SPEAK DETAILS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen hidden">
+            <div class="screen-container">
+                <header class="screen-header">
+                    <button id="back-from-settings-btn" class="text-button">BACK</button>
+                    <h1>SETTINGS</h1>
+                    <div class="header-spacer"></div>
+                </header>
+                
+                <div class="settings-nav">
+                    <button class="settings-nav-btn active" data-section="voice">VOICE</button>
+                    <button class="settings-nav-btn" data-section="vision">VISION</button>
+                    <button class="settings-nav-btn" data-section="safety">SAFETY</button>
+                    <button class="settings-nav-btn" data-section="accessibility">ACCESSIBILITY</button>
+                    <button class="settings-nav-btn" data-section="privacy">PRIVACY</button>
+                </div>
+                
+                <div id="settings-content" class="settings-content">
+                    <!-- Dynamic settings content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Detection History Screen -->
+        <div id="history-screen" class="screen hidden">
+            <div class="screen-container">
+                <header class="screen-header">
+                    <button id="back-from-history-btn" class="text-button">BACK</button>
+                    <h1>DETECTION HISTORY</h1>
+                    <button id="clear-history-btn" class="text-button">CLEAR</button>
+                </header>
+                
+                <div id="history-list" class="history-list">
+                    <div class="history-empty">
+                        <span class="empty-text">No detection history</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Screen -->
+        <div id="help-screen" class="screen hidden">
+            <div class="screen-container">
+                <header class="screen-header">
+                    <button id="back-from-help-btn" class="text-button">BACK</button>
+                    <h1>HELP</h1>
+                    <div class="header-spacer"></div>
+                </header>
+                
+                <div class="help-content">
+                    <div class="help-section">
+                        <h2 class="help-title">Voice Commands</h2>
+                        <ul class="help-list">
+                            <li>"Start detection" - Begin continuous detection</li>
+                            <li>"Stop detection" - Pause detection</li>
+                            <li>"What is around me" - Describe surroundings</li>
+                            <li>"Who is nearby" - Detect people only</li>
+                            <li>"What is ahead" - Describe objects in front</li>
+                            <li>"Repeat" - Repeat last announcement</li>
+                            <li>"Increase voice speed" - Make speech faster</li>
+                            <li>"Decrease voice speed" - Make speech slower</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2 class="help-title">Detection Priority</h2>
+                        <p class="help-text">Safety-critical objects like vehicles and obstacles are announced first. Informational objects like bottles and books are announced when safe.</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2 class="help-title">Privacy</h2>
+                        <p class="help-text">Camera processing is performed on this device. Your camera feed is not stored or transmitted to external servers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Screen -->
+        <div id="about-screen" class="screen hidden">
+            <div class="screen-container">
+                <header class="screen-header">
+                    <button id="back-from-about-btn" class="text-button">BACK</button>
+                    <h1>ABOUT</h1>
+                    <div class="header-spacer"></div>
+                </header>
+                
+                <div class="about-content">
+                    <h2 class="about-title">VISUAL ASSIST</h2>
+                    <p class="about-version">Version 1.0.0</p>
+                    <p class="about-description">Real-time vision assistance for visually impaired users. Understand your surroundings through intelligent computer vision and natural voice feedback.</p>
+                    
+                    <div class="about-section">
+                        <h3 class="about-section-title">Technology</h3>
+                        <p class="about-text">Powered by TensorFlow.js and COCO-SSD object detection model. All processing performed on-device for privacy and reliability.</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3 class="about-section-title">Accessibility</h3>
+                        <p class="about-text">Designed with accessibility first principles. Screen reader support, large touch targets, high contrast, and voice-first interaction.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="error-screen" class="screen hidden">
+            <div class="screen-container">
+                <div class="error-content">
+                    <h1 id="error-title" class="error-title">ERROR</h1>
+                    <p id="error-message" class="error-message">An error occurred</p>
+                    <button id="error-action-btn" class="neumorphic-button primary">RETRY</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permission Screen -->
+        <div id="permission-screen" class="screen hidden">
+            <div class="screen-container">
+                <div class="permission-content">
+                    <h1 id="permission-title" class="permission-title">PERMISSION REQUIRED</h1>
+                    <p id="permission-message" class="permission-message">Camera access is required for visual assistance</p>
+                    <button id="grant-permission-btn" class="neumorphic-button primary">GRANT PERMISSION</button>
+                    <button id="deny-permission-btn" class="neumorphic-button secondary">CANCEL</button>
+                </div>
+            </div>
+        </div>
     </div>
-    <video id="video" autoplay playsinline></video>
-  </div>
-  <div class="cam-bar">
-    <span class="cam-label">Live Feed</span>
-    <button class="btn-cam" id="startBtn" onclick="startCamera()">
-      ▶ Start Camera
-    </button>
-  </div>
-</div>
-
-<!-- Result card -->
-<div class="result-card">
-  <div class="result-header">
-    <span class="result-title">Detection Result</span>
-    <span class="confidence-chip" id="chip">Live</span>
-  </div>
-  <div class="result-body">
-    <div class="result-icon-wrap" id="resultIcon">🔍</div>
-    <span class="result-text idle" id="result">Start the camera to begin detection.</span>
-  </div>
-</div>
-
-<!-- Action buttons -->
-<div class="action-row">
-  <button class="btn-action" onclick="capture()">🔍 Analyze Now</button>
-  <button class="btn-action" id="speakBtn" onclick="speak()">🔊 Read Aloud</button>
-</div>
-
-<footer>Auto-detects every 3 seconds · TensorFlow COCO-SSD</footer>
-
-<script>
-  let stream, description = "", model;
-  let autoSpeak = false;
-
-  async function loadModel() {
-    setStatus("Loading AI…", false);
-    model = await cocoSsd.load();
-    setStatus("AI Ready", true);
-    document.getElementById("result").textContent = "Camera not started yet.";
-    startCamera();
-  }
-
-  function setStatus(text, ok) {
-    document.getElementById("statusText").textContent = text;
-    const pill = document.getElementById("statusPill");
-    pill.style.background  = ok ? "var(--green-lo)"               : "rgba(234,179,8,0.12)";
-    pill.style.borderColor = ok ? "rgba(34,197,94,0.25)"          : "rgba(234,179,8,0.25)";
-    pill.style.color       = ok ? "var(--green)"                  : "#eab308";
-    pill.querySelector('.status-dot').style.background = ok ? "var(--green)" : "#eab308";
-  }
-
-  function startCamera() {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
-      stream = s;
-      const video = document.getElementById("video");
-      video.srcObject = stream;
-      document.getElementById("noFeed").style.display = "none";
-      document.getElementById("startBtn").disabled = true;
-      document.getElementById("startBtn").textContent = "● Live";
-      document.getElementById("chip").style.display = "inline-block";
-      setStatus("Detecting", true);
-      setInterval(autoDetect, 3000);
-    }).catch(() => setStatus("Camera error", false));
-  }
-
-  function capture() { autoDetect(); }
-
-  async function autoDetect() {
-    const video = document.getElementById("video");
-    if (!model || !stream) return;
-    document.getElementById("cameraFrame").classList.add("scanning");
-    const predictions = await model.detect(video);
-    document.getElementById("cameraFrame").classList.remove("scanning");
-
-    const resultEl = document.getElementById("result");
-    const iconEl   = document.getElementById("resultIcon");
-    resultEl.classList.remove("idle");
-
-    if (predictions.length > 0) {
-      const top = predictions[0].class;
-      if (top === "person") {
-        description = "Person detected in front of you.";
-        iconEl.textContent = "🧍";
-      } else {
-        description = "Object detected: " + top;
-        iconEl.textContent = "📦";
-      }
-      resultEl.textContent = description;
-      speak();
-    } else {
-      description = "No object detected.";
-      iconEl.textContent = "🔍";
-      resultEl.textContent = description;
-    }
-  }
-
-  function speak() {
-    if (!description) return;
-    const utter = new SpeechSynthesisUtterance(description);
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utter);
-    const btn = document.getElementById("speakBtn");
-    btn.classList.add("active");
-    utter.onend = () => btn.classList.remove("active");
-  }
-
-  loadModel();
-</script>
 </body>
 </html>

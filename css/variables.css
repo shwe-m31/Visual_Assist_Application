@@ -1,0 +1,115 @@
+:root {
+    /* Neumorphic Color System */
+    --bg-primary: #0B1220;
+    --bg-secondary: #111827;
+    --surface: #151F31;
+    --surface-elevated: #192438;
+    --surface-higher: #1E2A3D;
+    
+    /* Text Colors */
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --text-disabled: #475569;
+    
+    /* Accent Colors */
+    --accent: #FACC15;
+    --accent-muted: rgba(250, 204, 21, 0.15);
+    --accent-hover: rgba(250, 204, 21, 0.25);
+    
+    /* Status Colors */
+    --success: #4ADE80;
+    --success-muted: rgba(74, 222, 128, 0.15);
+    --warning: #FB923C;
+    --warning-muted: rgba(251, 146, 60, 0.15);
+    --danger: #F87171;
+    --danger-muted: rgba(248, 113, 113, 0.15);
+    
+    /* Neumorphic Shadows */
+    --shadow-light: rgba(255, 255, 255, 0.03);
+    --shadow-dark: rgba(0, 0, 0, 0.4);
+    
+    --neumorphic-outset: 
+        6px 6px 12px var(--shadow-dark),
+        -6px -6px 12px var(--shadow-light);
+    
+    --neumorphic-inset: 
+        inset 6px 6px 12px var(--shadow-dark),
+        inset -6px -6px 12px var(--shadow-light);
+    
+    --neumorphic-outset-subtle: 
+        4px 4px 8px var(--shadow-dark),
+        -4px -4px 8px var(--shadow-light);
+    
+    --neumorphic-inset-subtle: 
+        inset 4px 4px 8px var(--shadow-dark),
+        inset -4px -4px 8px var(--shadow-light);
+    
+    /* Typography */
+    --font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-base: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+    --font-size-2xl: 32px;
+    --font-size-3xl: 48px;
+    
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+    
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    --spacing-3xl: 64px;
+    
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-2xl: 32px;
+    --radius-full: 9999px;
+    
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 200ms ease;
+    --transition-slow: 300ms ease;
+    
+    /* Z-Index */
+    --z-base: 1;
+    --z-elevated: 10;
+    --z-modal: 100;
+    --z-toast: 1000;
+}
+
+/* Accessibility: High Contrast Mode */
+@media (prefers-contrast: high) {
+    :root {
+        --text-primary: #FFFFFF;
+        --text-secondary: #E2E8F0;
+        --text-muted: #CBD5E1;
+        --surface: #1E293B;
+        --surface-elevated: #334155;
+    }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --transition-fast: 0ms;
+        --transition-normal: 0ms;
+        --transition-slow: 0ms;
+    }
+}
